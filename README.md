@@ -1,4 +1,4 @@
-# Secret Share
+# xplit
 
 XOR-based 2-of-2 secret sharing with CRC32 integrity checks.
 
