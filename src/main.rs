@@ -1,10 +1,10 @@
-use clap::{Parser, Subcommand};
-use xororo::{split_secret, recover_secret};
 use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
+use clap::{Parser, Subcommand};
 use std::io::{self, Read};
+use xplit::{recover_secret, split_secret};
 
 #[derive(Parser)]
-#[command(name = "secret-share")]
+#[command(name = "xplit")]
 #[command(about = "Split and recover secrets using 2-of-2 secret sharing", long_about = None)]
 struct Cli {
     #[command(subcommand)]
@@ -32,32 +32,32 @@ fn main() -> io::Result<()> {
 
     match cli.command {
         Commands::Split { secret } => {
-            let secret_bytes = match secret {
-                Some(s) => s.into_bytes(),
-                None => {
-                    let mut buffer = Vec::new();
-                    io::stdin().read_to_end(&mut buffer)?;
-                    buffer
-                }
+            let secret_bytes = if let Some(s) = secret {
+                s.into_bytes()
+            } else {
+                let mut buffer = Vec::new();
+                io::stdin().read_to_end(&mut buffer)?;
+                buffer
             };
 
-            let shares = split_secret(&secret_bytes)
-                .expect("Failed to split secret");
+            let shares = split_secret(&secret_bytes).expect("Failed to split secret");
 
             println!("Share 1: {}", BASE64.encode(&shares.share1));
             println!("Share 2: {}", BASE64.encode(&shares.share2));
         }
         Commands::Recover { share1, share2 } => {
-            let share1_bytes = BASE64.decode(share1)
+            let share1_bytes = BASE64
+                .decode(share1)
                 .expect("Failed to decode share1 from base64");
-            let share2_bytes = BASE64.decode(share2)
+            let share2_bytes = BASE64
+                .decode(share2)
                 .expect("Failed to decode share2 from base64");
 
-            let recovered = recover_secret(&share1_bytes, &share2_bytes)
-                .expect("Failed to recover secret");
+            let recovered =
+                recover_secret(&share1_bytes, &share2_bytes).expect("Failed to recover secret");
 
             match String::from_utf8(recovered.clone()) {
-                Ok(s) => println!("{}", s),
+                Ok(s) => println!("{s}"),
                 Err(_) => {
                     // If not valid UTF-8, output as hex
                     println!("Binary data (hex): {}", hex::encode(recovered));

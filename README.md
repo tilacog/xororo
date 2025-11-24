@@ -10,17 +10,17 @@ Splits a secret into two shares. Both shares are required to recover the origina
 
 ```bash
 # Split a secret
-xororo split "my secret"
+xplit split "Hello, World!"
 # Output:
 # Share 1: ZiTjk3OD6puSVM/JV3CYopI=
 # Share 2: LkGP/xyvysz9JqOtdpOmJ8A=
 
 # Recover the secret
-xororo recover "ZiTjk3OD6puSVM/JV3CYopI=" "LkGP/xyvysz9JqOtdpOmJ8A="
-# Output: my secret
+xplit recover "ZiTjk3OD6puSVM/JV3CYopI=" "LkGP/xyvysz9JqOtdpOmJ8A="
+# Output: Hello, World!
 
 # Read from stdin
-echo "secret" | xororo split
+echo "secret" | xplit split
 ```
 
 ## Features
