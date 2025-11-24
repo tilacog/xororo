@@ -10,17 +10,17 @@ Splits a secret into two shares. Both shares are required to recover the origina
 
 ```bash
 # Split a secret
-cargo run -- split "my secret"
+xororo split "my secret"
 # Output:
 # Share 1: ZiTjk3OD6puSVM/JV3CYopI=
 # Share 2: LkGP/xyvysz9JqOtdpOmJ8A=
 
 # Recover the secret
-cargo run -- recover "ZiTjk3OD6puSVM/JV3CYopI=" "LkGP/xyvysz9JqOtdpOmJ8A="
+xororo recover "ZiTjk3OD6puSVM/JV3CYopI=" "LkGP/xyvysz9JqOtdpOmJ8A="
 # Output: my secret
 
 # Read from stdin
-echo "secret" | cargo run -- split
+echo "secret" | xororo split
 ```
 
 ## Features
