@@ -30,7 +30,9 @@ echo "secret" | xplit split
 
 ## Web Interface
 
-Build and run locally (requires [wasm-pack](https://rustwasm.github.io/wasm-pack/installer/)):
+**[Try the live demo](https://tilacog.github.io/xplit/)** (runs entirely in your browser)
+
+Or build and run locally (requires [wasm-pack](https://rustwasm.github.io/wasm-pack/installer/)):
 
 ```bash
 just wasm-build        # Build WASM module
