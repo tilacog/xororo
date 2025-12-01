@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XPlit - XOR-based 2-of-2 Secret Sharing</title>
+    <meta name="description" content="Split secrets into two shares using XOR-based 2-of-2 secret sharing with CRC32 integrity checks">
+
+    <!-- Bulma CSS from CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+
+    <style>
+        /* Ensure full height coverage */
+        html, body {
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #ffffff;
+            color: #363636;
+        }
+
+        /* Dark theme for Bulma */
+        body.dark-theme {
+            background-color: #0d1117;
+            color: #f0f6fc;
+        }
+
+        body.dark-theme .box,
+        body.dark-theme .card {
+            background-color: #161b22;
+            color: #f0f6fc;
+            border-color: #30363d;
+        }
+
+        body.dark-theme .notification {
+            background-color: #161b22;
+            color: #f0f6fc;
+        }
+
+        body.dark-theme .notification.is-danger {
+            background-color: #da3633;
+            color: #ffffff;
+        }
+
+        body.dark-theme .notification.is-danger.is-light {
+            background-color: #49050a;
+            color: #ff7b72;
+        }
+
+        body.dark-theme .notification.is-warning.is-light {
+            background-color: #4d3800;
+            color: #ffa657;
+        }
+
+        body.dark-theme .notification.is-success {
+            background-color: #238636;
+            color: #ffffff;
+        }
+
+        body.dark-theme .notification.is-info.is-light {
+            background-color: #033d8b;
+            color: #79c0ff;
+        }
+
+        body.dark-theme .input,
+        body.dark-theme .textarea {
+            background-color: #0d1117;
+            color: #f0f6fc;
+            border-color: #30363d;
+        }
+
+        body.dark-theme .input::placeholder,
+        body.dark-theme .textarea::placeholder {
+            color: #8b949e;
+        }
+
+        body.dark-theme .label {
+            color: #f0f6fc;
+        }
+
+        body.dark-theme .help {
+            color: #8b949e;
+        }
+
+        body.dark-theme .title,
+        body.dark-theme .subtitle {
+            color: #f0f6fc;
+        }
+
+        body.dark-theme .share-display {
+            background-color: #0d1117;
+            color: #f0f6fc;
+            border: 1px solid #30363d;
+        }
+
+        body.dark-theme .footer {
+            background-color: #0d1117;
+            border-top: 1px solid #30363d;
+        }
+
+        body.dark-theme .tabs a {
+            color: #8b949e;
+            border-bottom-color: #30363d;
+            background-color: transparent;
+        }
+
+        body.dark-theme .tabs a:hover {
+            color: #f0f6fc;
+            border-bottom-color: #8b949e;
+            background-color: transparent;
+        }
+
+        body.dark-theme .tabs li.is-active a {
+            color: #58a6ff;
+            border-bottom-color: #58a6ff;
+            background-color: transparent;
+        }
+
+        body.dark-theme .tabs li.is-active a:hover {
+            color: #58a6ff;
+            background-color: transparent;
+        }
+
+        body.dark-theme a {
+            color: #58a6ff;
+        }
+
+        body.dark-theme a:hover {
+            color: #79c0ff;
+        }
+
+        /* Tab content visibility */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Share display styling */
+        .share-display {
+            font-family: monospace;
+            background-color: #f5f5f5;
+            padding: 1rem;
+            border-radius: 4px;
+            word-wrap: break-word;
+            margin-bottom: 1rem;
+            font-size: 0.90em;
+        }
+
+        .share-card {
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid #dbdbdb;
+        }
+
+        body.dark-theme .share-card {
+            border-color: #30363d;
+        }
+
+        .share-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .hidden-text {
+            filter: blur(8px);
+            user-select: none;
+            cursor: pointer;
+            transition: filter 0.3s;
+        }
+
+        .hidden-text.revealed {
+            filter: none;
+            user-select: text;
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        /* Theme toggle positioning */
+        .theme-toggle {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Custom toggle switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #3273dc;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .qr-code {
+            text-align: center;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .qr-container {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Theme Toggle -->
+        <div class="theme-toggle">
+            <label class="switch">
+                <input type="checkbox" id="theme-switch" checked>
+                <span class="slider"></span>
+            </label>
+            <span class="ml-2" id="theme-label">Dark</span>
+        </div>
+
+        <!-- Header -->
+        <section class="section">
+            <h1 class="title is-1">XPlit</h1>
+            <p class="subtitle is-4">One-Time Pad (OTP) 2-of-2 Secret Sharing</p>
+        </section>
+
+        <!-- Security Warning Banner -->
+        <div class="notification is-danger is-light">
+            <strong>DEMO ONLY</strong><br>
+            Do not use with real sensitive data. This tool runs entirely in your browser,
+            but you should never enter real secrets into any web application.
+            Use the <a href="https://github.com/tilacog/xplit">CLI tool</a> for production use.
+        </div>
+
+        <!-- Info Banner -->
+        <div class="notification is-info is-light">
+            <strong>How it works:</strong> XPlit implements a one-time pad (OTP) using XOR with cryptographically random data.
+            Both shares are required to recover the secret. One share alone reveals zero information about the secret
+            (information-theoretic security). CRC32 checksums detect corrupted shares.
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="tabs is-boxed is-large">
+            <ul>
+                <li class="is-active" id="split-tab-link">
+                    <a onclick="switchTab('split')">Split Secret</a>
+                </li>
+                <li id="recover-tab-link">
+                    <a onclick="switchTab('recover')">Recover Secret</a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Split Tab -->
+        <div id="split-tab" class="tab-content active">
+            <div class="box">
+                <h2 class="title is-3">Split Secret into Two Shares</h2>
+                <p class="subtitle is-6">Split a secret into two shares using one-time pad encryption. Both shares are required for recovery.</p>
+
+                <form id="split-form">
+                    <div class="field">
+                        <label class="label" for="secret-input">Secret Text</label>
+                        <div class="control">
+                            <textarea class="textarea" id="secret-input" placeholder="Enter your secret here..." rows="4" required></textarea>
+                        </div>
+                        <p class="help">Enter any text you want to split into shares</p>
+                    </div>
+
+                    <div class="field">
+                        <div class="control">
+                            <button class="button is-primary is-large" type="submit">Generate Shares</button>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="notification is-danger" id="split-error" style="display: none;"></div>
+                <div id="split-result" class="mt-6" style="display: none;">
+                    <h3 class="title is-4">Generated Shares</h3>
+                    <p class="help mb-3">Store these shares in separate locations. Both shares are required to recover the secret.</p>
+
+                    <div class="share-card">
+                        <div class="share-header">
+                            <h4 class="title is-5">Share 1</h4>
+                        </div>
+                        <div class="share-display" id="share1-display"></div>
+                        <div class="buttons">
+                            <button class="button is-link" type="button" onclick="copyShare(1, this)">Copy Share 1</button>
+                            <button class="button is-info" type="button" onclick="toggleQR(1, this)">Show QR Code</button>
+                        </div>
+                        <div id="qr-container-1" class="qr-container" style="display: none;">
+                            <div id="qr-code-1" class="qr-code"></div>
+                        </div>
+                    </div>
+
+                    <div class="share-card">
+                        <div class="share-header">
+                            <h4 class="title is-5">Share 2</h4>
+                        </div>
+                        <div class="share-display" id="share2-display"></div>
+                        <div class="buttons">
+                            <button class="button is-link" type="button" onclick="copyShare(2, this)">Copy Share 2</button>
+                            <button class="button is-info" type="button" onclick="toggleQR(2, this)">Show QR Code</button>
+                        </div>
+                        <div id="qr-container-2" class="qr-container" style="display: none;">
+                            <div id="qr-code-2" class="qr-code"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recover Tab -->
+        <div id="recover-tab" class="tab-content">
+            <div class="box">
+                <h2 class="title is-3">Recover Secret from Shares</h2>
+                <p class="subtitle is-6">Enter both shares to reconstruct the original secret. Both shares are required.</p>
+
+                <form id="recover-form">
+                    <div class="field">
+                        <label class="label" for="share1-input">Share 1 (base64 encoded)</label>
+                        <div class="control">
+                            <textarea class="textarea" id="share1-input" placeholder="Paste Share 1 here..." rows="3" required></textarea>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="label" for="share2-input">Share 2 (base64 encoded)</label>
+                        <div class="control">
+                            <textarea class="textarea" id="share2-input" placeholder="Paste Share 2 here..." rows="3" required></textarea>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <div class="control">
+                            <button class="button is-primary is-large" type="submit">Recover Secret</button>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="notification is-danger" id="recover-error" style="display: none;"></div>
+                <div id="recover-result" style="display: none;">
+                  <div class="notification is-success mt-6">
+                        Successfully recovered secret!
+                    </div>
+                    <h3 class="title is-4">Recovered Secret</h3>
+                    <div class="box share-card">
+                        <div class="share-display hidden-text" id="recovered-secret" onclick="toggleSecretVisibility()">
+                            Click to reveal
+                        </div>
+                        <div class="field is-grouped">
+                            <div class="control">
+                                <button class="button is-info" type="button" onclick="toggleSecretVisibility()">Toggle Visibility</button>
+                            </div>
+                            <div class="control">
+                                <button class="button is-link" type="button" onclick="copyRecoveredSecret(this)">Copy to Clipboard</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="content has-text-centered">
+                <p>
+                    <strong>XPlit</strong> - One-time pad (OTP) 2-of-2 secret sharing with CRC32 integrity checks
+                </p>
+                <p>
+                    <a href="https://github.com/tilacog/xplit">GitHub Repository</a>
+                </p>
+                <p class="is-size-7">
+                    All computation happens entirely in your browser. No data is transmitted to any server.<br>
+                    Built with Rust + WebAssembly | UI: Bulma CSS
+                </p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- QR Code Library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
+    <!-- WASM Module -->
+    <script type="module" src="app.js"></script>
+
+    <script>
+        // Theme toggle
+        const themeSwitch = document.getElementById('theme-switch');
+        const themeLabel = document.getElementById('theme-label');
+        const body = document.body;
+
+        // Load saved theme preference or default to dark
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        if (savedTheme === 'dark') {
+            body.classList.add('dark-theme');
+        }
+        themeSwitch.checked = savedTheme === 'dark';
+        themeLabel.textContent = savedTheme === 'dark' ? 'Dark' : 'Light';
+
+        // Theme toggle handler
+        themeSwitch.addEventListener('change', function() {
+            const newTheme = this.checked ? 'dark' : 'light';
+            if (newTheme === 'dark') {
+                body.classList.add('dark-theme');
+            } else {
+                body.classList.remove('dark-theme');
+            }
+            themeLabel.textContent = newTheme === 'dark' ? 'Dark' : 'Light';
+            localStorage.setItem('theme', newTheme);
+        });
+
+        // Tab switching
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tabs li').forEach(li => {
+                li.classList.remove('is-active');
+            });
+            document.getElementById(tabName + '-tab-link').classList.add('is-active');
+
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(tabName + '-tab').classList.add('active');
+
+            // Only clear error messages, keep results visible
+            document.getElementById('split-error').style.display = 'none';
+            document.getElementById('recover-error').style.display = 'none';
+        }
+
+        // Toggle secret visibility
+        function toggleSecretVisibility() {
+            const element = document.getElementById('recovered-secret');
+            element.classList.toggle('revealed');
+        }
+
+        // Copy recovered secret to clipboard
+        async function copyRecoveredSecret(buttonElement) {
+            const element = document.getElementById('recovered-secret');
+            const text = element.textContent;
+
+            try {
+                await navigator.clipboard.writeText(text);
+                const originalText = buttonElement.textContent;
+                buttonElement.textContent = 'Copied!';
+                setTimeout(() => {
+                    buttonElement.textContent = originalText;
+                }, 2000);
+            } catch (err) {
+                alert('Failed to copy to clipboard');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,7 +1,10 @@
 use crc32fast::Hasher;
 use rand::RngCore;
-use rand::rng;
 use thiserror::Error;
+
+// WASM bindings module
+#[cfg(target_arch = "wasm32")]
+pub mod wasm;
 
 /// Split a secret into exactly 2 shares - both required for recovery
 #[derive(Debug)]
@@ -32,7 +35,7 @@ pub fn split_secret(secret: &[u8]) -> Result<TwoShares, ShareError> {
     }
 
     let mut share2_data = vec![0u8; secret.len()];
-    let mut rand_gen = rng();
+    let mut rand_gen = rand::thread_rng();
     rand_gen.fill_bytes(&mut share2_data); // Generate random data
 
     // share1 is secret XOR'd with the random data

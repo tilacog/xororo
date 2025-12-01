@@ -1,17 +1,8 @@
 # xplit
 
-One-time pad (OTP) based 2-of-2 secret sharing with CRC32 integrity checks.
+One-time pad (OTP) 2-of-2 secret sharing with CRC32 integrity checks.
 
-## What It Does
-
-Splits a secret into two shares. Both shares are required to recover the original secret. Each share alone reveals zero information.
-
-## How It Works
-
-Implements a one-time pad using XOR operation with cryptographically random data:
-- Share 1 = secret ⊕ one-time pad
-- Share 2 = one-time pad
-- Recovery = Share 1 ⊕ Share 2
+Splits a secret into two shares. Both shares are required to recover the original secret. Each share alone reveals zero information (information-theoretic security).
 
 ## Usage
 
@@ -32,7 +23,18 @@ echo "secret" | xplit split
 
 ## Features
 
-- One-time pad cryptography with information-theoretic security (one share reveals nothing)
-- CRC32 checksums detect corrupted shares
-- Base64 encoding
-- Binary data support
+- One-time pad encryption (information-theoretic security)
+- CRC32 integrity checks
+- Base64 encoding with binary data support
+- CLI and web interface (WebAssembly)
+
+## Web Interface
+
+Build and run locally (requires [wasm-pack](https://rustwasm.github.io/wasm-pack/installer/)):
+
+```bash
+just wasm-build        # Build WASM module
+just wasm-dev          # Build and serve at http://localhost:8000
+```
+
+**⚠️ Demo only** - Use CLI for production/sensitive data. All computation happens in the browser.
