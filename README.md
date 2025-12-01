@@ -1,6 +1,6 @@
 # xplit
 
-XOR-based 2-of-2 secret sharing with CRC32 integrity checks.
+One-time pad (OTP) based 2-of-2 secret sharing with CRC32 integrity checks.
 
 ## What It Does
 
@@ -25,14 +25,14 @@ echo "secret" | xplit split
 
 ## Features
 
-- Information-theoretic security (one share reveals nothing)
+- One-time pad cryptography with information-theoretic security (one share reveals nothing)
 - CRC32 checksums detect corrupted shares
-- Base64 encoding for easy sharing
-- Supports binary data
+- Base64 encoding
+- Binary data support
 
 ## How It Works
 
-Uses XOR operation with cryptographically random data:
-- Share 1 = secret ⊕ random
-- Share 2 = random
+Implements a one-time pad using XOR operation with cryptographically random data:
+- Share 1 = secret ⊕ one-time pad
+- Share 2 = one-time pad
 - Recovery = Share 1 ⊕ Share 2
